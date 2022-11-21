@@ -1,0 +1,2 @@
+# httparser
+httparser is a small Golang package for parsing HTTP files.
