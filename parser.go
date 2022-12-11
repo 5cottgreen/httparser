@@ -7,13 +7,70 @@ import (
 )
 
 type Request struct {
-	Method, Path string
-	Proto        string
-	Headers      map[string]string
-	Body         string
+	Line    Line
+	Headers map[string]string
+	Body    string
 }
 
-// Parses the buffer as an HTTP request and returns data as a Request
+type Line struct {
+	Method, Path string
+	Proto        string
+}
+
+// Parse parses the line of HTTP request and returns a Line
+func ParseLine(input []byte) (line Line, err error) {
+	http := *(*string)(unsafe.Pointer(&input))
+	l := len(http)
+	pass := 0
+	ok := false
+
+	for i := pass; i < l; i++ {
+		if http[i] == ' ' {
+			line.Method = http[:i]
+			pass = i + 1
+			ok = true
+			break
+		}
+	}
+
+	if !ok {
+		return Line{}, errors.New("missing method")
+	}
+
+	ok = false
+
+	for i := pass; i < l; i++ {
+		if http[i] == ' ' {
+			line.Path = http[pass:i]
+			pass = i + 1
+			ok = true
+			break
+		}
+	}
+
+	if !ok {
+		return Line{}, errors.New("missing path")
+	}
+
+	ok = false
+
+	for i := pass; i < l; i++ {
+		if http[i] == '\r' {
+			line.Proto = http[pass:i]
+			pass = i + 2
+			ok = true
+			break
+		}
+	}
+
+	if !ok {
+		return Line{}, errors.New("missing protocol")
+	}
+
+	return line, nil
+}
+
+// Parse parses the HTTP request and returns a Request
 func Parse(input []byte) (req Request, err error) {
 	http := *(*string)(unsafe.Pointer(&input))
 	l := len(http)
@@ -22,7 +79,7 @@ func Parse(input []byte) (req Request, err error) {
 
 	for i := pass; i < l; i++ {
 		if http[i] == ' ' {
-			req.Method = http[:i]
+			req.Line.Method = http[:i]
 			pass = i + 1
 			ok = true
 			break
@@ -37,7 +94,7 @@ func Parse(input []byte) (req Request, err error) {
 
 	for i := pass; i < l; i++ {
 		if http[i] == ' ' {
-			req.Path = http[pass:i]
+			req.Line.Path = http[pass:i]
 			pass = i + 1
 			ok = true
 			break
@@ -52,7 +109,7 @@ func Parse(input []byte) (req Request, err error) {
 
 	for i := pass; i < l; i++ {
 		if http[i] == '\r' {
-			req.Proto = http[pass:i]
+			req.Line.Proto = http[pass:i]
 			pass = i + 2
 			ok = true
 			break

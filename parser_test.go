@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestParser(t *testing.T) {
+func TestParse(t *testing.T) {
 	method := "GET"
 	path := "/main"
 	proto := "HTTP/1.1"
@@ -16,17 +16,17 @@ func TestParser(t *testing.T) {
 
 	req, err := Parse(http)
 	if err != nil {
-		t.Errorf("the '%s' error was expected", err.Error())
+		t.Errorf("the '%s' error was not expected", err.Error())
 	} else {
-		if req.Method != method {
+		if req.Line.Method != method {
 			t.Errorf("the '%s' method was expected", method)
 		}
 
-		if req.Path != path {
+		if req.Line.Path != path {
 			t.Errorf("the '%s' path was expected", path)
 		}
 
-		if req.Proto != proto {
+		if req.Line.Proto != proto {
 			t.Errorf("the '%s' protocol was expected", proto)
 		}
 
@@ -39,5 +39,31 @@ func TestParser(t *testing.T) {
 		if req.Body != body {
 			t.Errorf("the '%s' body was expected", body)
 		}
+	}
+}
+
+func TestLine(t *testing.T) {
+	method := "GET"
+	path := "/main"
+	proto := "HTTP/1.1"
+
+	http := []byte(method + " " + path + " " + proto + "\r\n")
+
+	line, err := ParseLine(http)
+	if err != nil {
+		t.Errorf("the '%s' error was not expected", err.Error())
+	} else {
+		if line.Method != method {
+			t.Errorf("the '%s' method was expected", method)
+		}
+
+		if line.Path != path {
+			t.Errorf("the '%s' path was expected", path)
+		}
+
+		if line.Proto != proto {
+			t.Errorf("the '%s' protocol was expected", proto)
+		}
+
 	}
 }
